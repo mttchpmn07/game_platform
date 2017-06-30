@@ -1,9 +1,9 @@
 import sys
 
 from time import sleep
-from PyQt5.QtCore import (QLineF, QPointF, QRectF, Qt)
+from PyQt5.QtCore import (QLineF, QPoint, QPointF, QRectF, Qt, QTimer)
 from PyQt5.QtGui import (QBrush, QColor, QPainter, QPen)
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsItem, QGraphicsView, QGraphicsScene
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsItem, QGraphicsView, QGraphicsScene, QGraphicsDropShadowEffect
 from PyQt5.uic import loadUi
 
 
@@ -13,8 +13,17 @@ class main_window(QMainWindow):
         loadUi('main_window.ui')
         self.setWindowTitle("Graphics Test")
         self.view = graphics_view()
-        self.setCentralWidget(self.view)
         self.view.init_scene()
+        self.setCentralWidget(self.view)
+
+        timer = QTimer(self)
+        timer.timeout.connect(self.loop)
+        timer.setInterval(50)
+        timer.start()
+
+    def loop(self):
+        self.view.update_scene()
+        print(self.view.player.pos)
 
 
 class graphics_view(QGraphicsView):
@@ -23,6 +32,11 @@ class graphics_view(QGraphicsView):
         self.setCacheMode(QGraphicsView.CacheBackground)
         self.world = world()
         self.player = player()
+        effect = QGraphicsDropShadowEffect(self)
+        # effect = self.graphicsEffect()
+        effect.setBlurRadius(15)
+        effect.setOffset(QPoint(0, 0))
+        #self.player.setGraphicsEffect(effect)
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -40,7 +54,6 @@ class graphics_view(QGraphicsView):
             self.player.move(10, 0)
         if key == Qt.Key_Escape:
             exit()
-        self.update_scene()
         super(graphics_view, self).keyPressEvent(event)
 
     def init_scene(self):
@@ -72,6 +85,8 @@ class world(QGraphicsItem):
 
     def paint(self, painter, option, widget):
         painter.setPen(Qt.black)
+        #painter.setBrush(QBrush(Qt.green))
+        #painter.drawRect(QRectF(0, 0, 800, 600))
 
 
 class player(QGraphicsItem):
@@ -85,6 +100,7 @@ class player(QGraphicsItem):
 
     def paint(self, painter, option, widget):
         painter.setPen(Qt.blue)
+        painter.setBrush(QBrush(Qt.black))
         painter.drawEllipse(QRectF(self.pos.x, self.pos.y, 30, 30))
 
     def move(self, velX, velY):
