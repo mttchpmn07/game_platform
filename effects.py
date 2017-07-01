@@ -18,7 +18,7 @@ class ProtoObj(object):
         self.radY = radY
         self.parent = parent
         self.ellipse = QGraphicsEllipseItem(posX, posY, radX, radY)
-        self.map = QPixmap('zelda.png')
+        self.map = QPixmap('link_static.png')
 
     def initObj(self):
         self.ellipse.setPos(self.posX, self.posY)
