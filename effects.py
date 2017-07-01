@@ -2,20 +2,44 @@
 
 import math
 
-from PyQt5.QtCore import QPointF, Qt, QTimer
+from PyQt5.QtCore import QRect, QPointF, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QLinearGradient, QPen, QPainter,
                          QPixmap, QRadialGradient)
-from PyQt5.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect,
+from PyQt5.QtWidgets import (QLabel, QGraphicsItem, QApplication, QFrame, QGraphicsDropShadowEffect,
                              QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsScene, QGraphicsView)
 
 
-class ObjProto(QGraphicsEllipseItem):
-    def __init__(self, posX=0, posY=0, radX=50, radY=50):
-        super().__init__(posX, posY, radX, radY)
-        self.posX = 0
-        self.posY = 0
+class ProtoObj(object):
+    def __init__(self, posX=0, posY=0, radX=30, radY=30, parent=None):
+        super().__init__()
+        self.posX = posX
+        self.posY = posY
+        self.radX = radX
+        self.radY = radY
+        self.parent = parent
+        self.ellipse = QGraphicsEllipseItem(posX, posY, radX, radY)
+        self.map = QPixmap('zelda.png')
 
-    def move(self, velX, velY):
+    def initObj(self):
+        self.ellipse.setPos(self.posX, self.posY)
+        self.ellipse.setPen(QPen(Qt.transparent, 1))
+        self.ellipse.setBrush(QBrush(Qt.green))
+        self.ellipse.setZValue(0)
+        effect = QGraphicsDropShadowEffect(self.parent)
+        effect.setBlurRadius(15)
+        effect.setColor(Qt.black)
+        self.ellipse.setGraphicsEffect(effect)
+        self.pix = self.parent.m_scene.addPixmap(self.map)
+        self.pix.setPos(self.posX, self.posY)
+        self.pix.setOffset(-37, -34)
+        self.pix.setZValue(2)
+        self.pix.setScale(.2)
+
+
+    def getObj(self):
+        return [self.ellipse, self.map]
+
+    def moveObj(self, velX, velY):
         self.posX += velX
         self.posY += velY
 
@@ -45,8 +69,8 @@ class Lighting(QGraphicsView):
         self.m_scene.setSceneRect(-300, -200, 600, 460)
 
         linearGrad = QLinearGradient(QPointF(-100, -100), QPointF(100, 100))
-        linearGrad.setColorAt(0, QColor(255, 255, 255))
-        linearGrad.setColorAt(1, QColor(192, 192, 255))
+        linearGrad.setColorAt(0, Qt.darkGreen)#QColor(255, 255, 255))
+        linearGrad.setColorAt(1, Qt.green)#QQColor(192, 192, 255))
         self.setBackgroundBrush(linearGrad)
 
         radialGrad = QRadialGradient(30, 30, 30)
@@ -66,36 +90,13 @@ class Lighting(QGraphicsView):
         self.m_lightSource = self.m_scene.addPixmap(pixmap)
         self.m_lightSource.setZValue(2)
 
+        proto = ProtoObj(0, 0, 50, 50, self)
+        proto.initObj()
+        self.proto = proto
 
-        for i in range(-2, 3):
-            for j in range(-2, 3):
-                if (i + j) & 1:
-                    item = QGraphicsEllipseItem(0, 0, 50, 50)
-                else:
-                    item = QGraphicsRectItem(0, 0, 50, 50)
-
-                item.setPen(QPen(Qt.black, 1))
-                item.setBrush(QBrush(Qt.white))
-
-                effect = QGraphicsDropShadowEffect(self)
-                effect.setBlurRadius(8)
-                item.setGraphicsEffect(effect)
-                item.setZValue(1)
-                item.setPos(i * 80, j * 80)
-                #self.m_scene.addItem(item)
-                #self.m_items.append(item)
-
-        proto = ObjProto(0, 0, 50, 50)
-        proto.setPen(QPen(Qt.white, 1))
-        proto.setBrush(QBrush(Qt.black))
-        proto.setPos(80, 80)
-        effect = QGraphicsDropShadowEffect(self)
-        effect.setBlurRadius(8)
-        proto.setGraphicsEffect(effect)
-        proto.setZValue(1)
-
-        self.m_items.append(proto)
-        self.m_scene.addItem(proto)
+        #self.m_items.append(self.proto.getObj()[0])
+        self.m_scene.addItem(self.proto.getObj()[0])
+        #self.m_scene.addItem(self.proto.getObj()[1])
 
     def animate(self):
         self.angle += (math.pi / 30)
@@ -103,41 +104,37 @@ class Lighting(QGraphicsView):
         ys = 200 * math.cos(self.angle) - 40 + 25
         self.m_lightSource.setPos(xs, ys)
 
-        for item in self.m_items:
-            effect = item.graphicsEffect()
+        item = self.proto.getObj()[0]
+        effect = item.graphicsEffect()
 
-            delta = QPointF(item.x() - xs, item.y() - ys)
-            effect.setOffset(QPointF(delta.toPoint() / 30))
+        delta = QPointF(item.x() - xs, item.y() - ys)
+        effect.setOffset(QPointF(delta.toPoint() / 30))
 
-            dd = math.hypot(delta.x(), delta.y())
-            color = effect.color()
-            color.setAlphaF(max(0.4, min(1 - dd / 200.0, 0.7)))
-            effect.setColor(color)
-            item.setPos(item.posX, item.posY)
-
+        dd = math.hypot(delta.x(), delta.y())
+        color = effect.color()
+        color.setAlphaF(max(0.4, min(1 - dd / 200.0, 0.7)))
+        effect.setColor(color)
+        item.setPos(self.proto.posX, self.proto.posY)
+        self.proto.pix.setPos(self.proto.posX, self.proto.posY)
         self.m_scene.update()
 
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Up or key == Qt.Key_W:
-            print('Pressed Up or W?')
-            for item in self.m_items:
-                item.move(0, -10)
+            #print('Pressed Up or W?')
+            self.proto.moveObj(0, -10)
             #self.player.move(0, -10)
         if key == Qt.Key_Down or key == Qt.Key_S:
-            print('Pressed Down or S?')
-            for item in self.m_items:
-                item.move(0, 10)
+            #print('Pressed Down or S?')
+            self.proto.moveObj(0, 10)
             #self.player.move(0, 10)
         if key == Qt.Key_Left or key == Qt.Key_A:
-            print('Pressed Left or A?')
-            for item in self.m_items:
-                item.move(-10, 0)
+            #print('Pressed Left or A?')
+            self.proto.moveObj(-10, 0)
             #self.player.move(-10, 0)
         if key == Qt.Key_Right or key == Qt.Key_D:
-            print('Pressed Right or D?')
-            for item in self.m_items:
-                item.move(10, 0)
+            #print('Pressed Right or D?')
+            self.proto.moveObj(10, 0)
             #self.player.move(10, 0)
         if key == Qt.Key_Escape:
             exit()
