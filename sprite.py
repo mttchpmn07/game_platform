@@ -74,8 +74,8 @@ class Sprite():
 
 class Link(Sprite):
     def __init__(self, x=0, y=0, parent=None, width=None, height=None):
-        super().__init__(x=0, y=0, sheet='linkEdit.png', parent=parent, width=width, height=height)
-        self.set_static(0, 0, 120, 130, -60, -65)
+        super().__init__(x=x, y=y, sheet='linkEdit.png', parent=parent, width=width, height=height)
+        self.set_static(0, 0, 120, 130, -380, -275)
 
         # Add state blink
         pix = []
@@ -84,6 +84,21 @@ class Link(Sprite):
         for i in range(1, 3):
             pix.append(self.sheet.copy(120 * i, 130 * 0, 120, 130))
         self.add_state('blink', pix, 80)
+
+        # Add state left_static
+        pix = []
+        pix.append(self.sheet.copy(120 * 0, 130 * 1, 120, 130))
+        self.add_state('left_static', pix, 80)
+
+        # Add state up_static
+        pix = []
+        pix.append(self.sheet.copy(120 * 0, 130 * 2, 120, 130))
+        self.add_state('up_static', pix, 80)
+
+        # Add state right_static
+        pix = []
+        pix.append(self.sheet.copy(120 * 0, 130 * 3, 120, 130))
+        self.add_state('right_static', pix, 80)
 
         # Add state down
         pix = []
@@ -114,14 +129,14 @@ class Demo(QGraphicsView):
     def __init__(self, parent=None):
         super(Demo, self).__init__(parent)
 
-        self.angle = 0.0
+        self.setFixedSize(self.size())
+
         self.m_scene = QGraphicsScene()
         self.m_lightSource = None
         self.m_items = []
         self.m_sprites = []
 
         self.setScene(self.m_scene)
-
         self.setup_scene()
 
         self.timer = QTimer(self)
@@ -132,6 +147,11 @@ class Demo(QGraphicsView):
         self.setRenderHint(QPainter.Antialiasing)
         self.setFrameStyle(QFrame.NoFrame)
 
+        self.mouse_down = False
+        self.setMouseTracking(True)
+
+        self.key_pressed = False
+
     def setup_scene(self):
         self.m_scene.setSceneRect(-300, -200, 600, 460)
 
@@ -140,7 +160,7 @@ class Demo(QGraphicsView):
         linear_grad.setColorAt(1, QColor(192, 192, 255))
         self.setBackgroundBrush(linear_grad)
 
-        link = Link(x=0, y=0, parent=self)
+        link = Link(x=320, y=210, parent=self)
         self.m_sprites.append(link)
 
     def animate(self):
@@ -150,20 +170,23 @@ class Demo(QGraphicsView):
 
     def keyPressEvent(self, event):
         key = event.key()
+        if event.isAutoRepeat() or self.mouse_down:
+            return
+        self.key_pressed = True
         if key == Qt.Key_Up or key == Qt.Key_W:
-            print('Pressed Up or W?')
+            #print('Pressed Up or W?')
             self.m_sprites[0].set_state('up')
         if key == Qt.Key_Down or key == Qt.Key_S:
-            print('Pressed Down or S?')
+            #print('Pressed Down or S?')
             self.m_sprites[0].set_state('down')
         if key == Qt.Key_Left or key == Qt.Key_A:
-            print('Pressed Left or A?')
+            #print('Pressed Left or A?')
             self.m_sprites[0].set_state('left')
         if key == Qt.Key_Right or key == Qt.Key_D:
-            print('Pressed Right or D?')
+            #print('Pressed Right or D?')
             self.m_sprites[0].set_state('right')
         if key == Qt.Key_Space:
-            print('Pressed Space?')
+            #print('Pressed Space?')
             if self.m_sprites[0].state == 'static':
                 self.m_sprites[0].set_state('blink')
             else:
@@ -171,6 +194,82 @@ class Demo(QGraphicsView):
         if key == Qt.Key_Escape:
             exit()
         super(Demo, self).keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        if event.isAutoRepeat() or self.mouse_down:
+            return
+        self.key_pressed = False
+        #print('Keyboard released?')
+        if self.m_sprites[0].state == 'left':
+            self.m_sprites[0].state = 'left_static'
+        if self.m_sprites[0].state == 'right':
+            self.m_sprites[0].state = 'right_static'
+        if self.m_sprites[0].state == 'down':
+            self.m_sprites[0].state = 'static'
+        if self.m_sprites[0].state == 'up':
+            self.m_sprites[0].state = 'up_static'
+
+    def mousePressEvent(self, event):
+        #print('Pressed mouse?')
+        self.mouse_down = True
+        sprite_x = self.m_sprites[0].x
+        sprite_y = self.m_sprites[0].y
+        mouse_x = event.pos().x()
+        mouse_y = event.pos().y()
+        diff_x = mouse_x -  sprite_x
+        diff_y = mouse_y - sprite_y
+        angle = math.atan2(diff_x, diff_y)*180/math.pi
+        #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
+        if -60 > angle > -120 and self.m_sprites[0].state != 'left':
+            self.m_sprites[0].set_state('left')
+        if 60 < angle < 120 and self.m_sprites[0].state != 'right':
+            self.m_sprites[0].set_state('right')
+        if -60 <= angle <= 60 and self.m_sprites[0].state != 'down':
+            self.m_sprites[0].set_state('down')
+        if (angle <= -120 or angle >= 120) and self.m_sprites[0].state != 'up':
+            self.m_sprites[0].set_state('up')
+
+    def mouseMoveEvent(self, event):
+        if self.key_pressed:
+            return
+        sprite_x = self.m_sprites[0].x
+        sprite_y = self.m_sprites[0].y
+        mouse_x = event.pos().x()
+        mouse_y = event.pos().y()
+        diff_x = mouse_x - sprite_x
+        diff_y = mouse_y - sprite_y
+        angle = math.atan2(diff_x, diff_y)*180/math.pi
+        #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
+        if self.mouse_down:
+            if -60 > angle > -120 and self.m_sprites[0].state != 'left':
+                self.m_sprites[0].set_state('left')
+            if 60 < angle < 120 and self.m_sprites[0].state != 'right':
+                self.m_sprites[0].set_state('right')
+            if -60 <= angle <= 60 and self.m_sprites[0].state != 'down':
+                self.m_sprites[0].set_state('down')
+            if (angle <= -120 or angle >= 120) and self.m_sprites[0].state != 'up':
+                self.m_sprites[0].set_state('up')
+        else:
+            if -60 > angle > -120 and self.m_sprites[0].state != 'left_static':
+                self.m_sprites[0].set_state('left_static')
+            if 60 < angle < 120 and self.m_sprites[0].state != 'right_static':
+                self.m_sprites[0].set_state('right_static')
+            if -60 <= angle <= 60 and self.m_sprites[0].state != 'static':
+                self.m_sprites[0].set_state('static')
+            if (angle <= -120 or angle >= 120) and self.m_sprites[0].state != 'up_static':
+                self.m_sprites[0].set_state('up_static')
+
+
+    def mouseReleaseEvent(self, event):
+        self.mouse_down = False
+        if self.m_sprites[0].state == 'left':
+            self.m_sprites[0].state = 'left_static'
+        if self.m_sprites[0].state == 'right':
+            self.m_sprites[0].state = 'right_static'
+        if self.m_sprites[0].state == 'down':
+            self.m_sprites[0].state = 'static'
+        if self.m_sprites[0].state == 'up':
+            self.m_sprites[0].state = 'up_static'
 
 
 def main():
