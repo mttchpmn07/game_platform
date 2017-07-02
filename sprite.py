@@ -75,6 +75,39 @@ class Sprite():
 class Link(Sprite):
     def __init__(self, x=0, y=0, parent=None, width=None, height=None):
         super().__init__(x=0, y=0, sheet='linkEdit.png', parent=parent, width=width, height=height)
+        self.set_static(0, 0, 120, 130, -60, -65)
+
+        # Add state blink
+        pix = []
+        for i in range(15):
+            pix.append(self.sheet.copy(0, 0, 120, 130))
+        for i in range(1, 3):
+            pix.append(self.sheet.copy(120 * i, 130 * 0, 120, 130))
+        self.add_state('blink', pix, 80)
+
+        # Add state down
+        pix = []
+        for i in range(10):
+            pix.append(self.sheet.copy(120 * i, 130 * 4, 120, 130))
+        self.add_state('down', pix, 80)
+
+        # Add state left
+        pix = []
+        for i in range(10):
+            pix.append(self.sheet.copy(120 * i, 130 * 5, 120, 130))
+        self.add_state('left', pix, 80)
+
+        # Add state up
+        pix = []
+        for i in range(10):
+            pix.append(self.sheet.copy(120 * i, 130 * 6, 120, 130))
+        self.add_state('up', pix, 80)
+
+        # Add state right
+        pix = []
+        for i in range(10):
+            pix.append(self.sheet.copy(120 * i, 130 * 7, 120, 130))
+        self.add_state('right', pix, 80)
 
 
 class Demo(QGraphicsView):
@@ -108,40 +141,7 @@ class Demo(QGraphicsView):
         self.setBackgroundBrush(linear_grad)
 
         link = Link(x=0, y=0, parent=self)
-        self.m_sprites.append(Sprite(0, 0, sheet='linkEdit.png', parent=self))
-        self.m_sprites[0].set_static(0, 0, 120, 130, -60, -65)
-
-        # Add state blink
-        pix = []
-        for i in range(15):
-            pix.append(self.m_sprites[0].sheet.copy(0, 0, 120, 130))
-        for i in range(1, 3):
-            pix.append(self.m_sprites[0].sheet.copy(120*i, 130*0, 120, 130))
-        self.m_sprites[0].add_state('blink', pix, 80)
-
-        # Add state down
-        pix = []
-        for i in range(10):
-            pix.append(self.m_sprites[0].sheet.copy(120*i, 130*4, 120, 130))
-        self.m_sprites[0].add_state('down', pix, 80)
-
-        # Add state left
-        pix = []
-        for i in range(10):
-            pix.append(self.m_sprites[0].sheet.copy(120*i, 130*5, 120, 130))
-        self.m_sprites[0].add_state('left', pix, 80)
-
-        # Add state up
-        pix = []
-        for i in range(10):
-            pix.append(self.m_sprites[0].sheet.copy(120*i, 130*6, 120, 130))
-        self.m_sprites[0].add_state('up', pix, 80)
-
-        # Add state right
-        pix = []
-        for i in range(10):
-            pix.append(self.m_sprites[0].sheet.copy(120*i, 130*7, 120, 130))
-        self.m_sprites[0].add_state('right', pix, 80)
+        self.m_sprites.append(link)
 
     def animate(self):
         #for sprite in self.m_sprites:
