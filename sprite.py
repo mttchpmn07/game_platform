@@ -168,6 +168,17 @@ class Demo(QGraphicsView):
         #    sprite.update()
         self.m_scene.update()
 
+    def get_angle(self, event):
+        sprite_x = self.m_sprites[0].x
+        sprite_y = self.m_sprites[0].y
+        mouse_x = event.pos().x()
+        mouse_y = event.pos().y()
+        diff_x = mouse_x - sprite_x
+        diff_y = mouse_y - sprite_y
+        angle = math.atan2(diff_x, diff_y) * 180 / math.pi
+        #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
+        return angle
+
     def keyPressEvent(self, event):
         key = event.key()
         if event.isAutoRepeat() or self.mouse_down:
@@ -199,27 +210,21 @@ class Demo(QGraphicsView):
         if event.isAutoRepeat() or self.mouse_down:
             return
         self.key_pressed = False
+        key = event.key()
         #print('Keyboard released?')
-        if self.m_sprites[0].state == 'left':
+        if self.m_sprites[0].state == 'left' and (key == Qt.Key_Left or key == Qt.Key_A):
             self.m_sprites[0].state = 'left_static'
-        if self.m_sprites[0].state == 'right':
+        if self.m_sprites[0].state == 'right' and (key == Qt.Key_Right or key == Qt.Key_D):
             self.m_sprites[0].state = 'right_static'
-        if self.m_sprites[0].state == 'down':
+        if self.m_sprites[0].state == 'down' and (key == Qt.Key_Down or key == Qt.Key_S):
             self.m_sprites[0].state = 'static'
-        if self.m_sprites[0].state == 'up':
+        if self.m_sprites[0].state == 'up' and (key == Qt.Key_Up or key == Qt.Key_W):
             self.m_sprites[0].state = 'up_static'
 
     def mousePressEvent(self, event):
         #print('Pressed mouse?')
         self.mouse_down = True
-        sprite_x = self.m_sprites[0].x
-        sprite_y = self.m_sprites[0].y
-        mouse_x = event.pos().x()
-        mouse_y = event.pos().y()
-        diff_x = mouse_x -  sprite_x
-        diff_y = mouse_y - sprite_y
-        angle = math.atan2(diff_x, diff_y)*180/math.pi
-        #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
+        angle = self.get_angle(event)
         if -60 > angle > -120 and self.m_sprites[0].state != 'left':
             self.m_sprites[0].set_state('left')
         if 60 < angle < 120 and self.m_sprites[0].state != 'right':
@@ -232,14 +237,7 @@ class Demo(QGraphicsView):
     def mouseMoveEvent(self, event):
         if self.key_pressed:
             return
-        sprite_x = self.m_sprites[0].x
-        sprite_y = self.m_sprites[0].y
-        mouse_x = event.pos().x()
-        mouse_y = event.pos().y()
-        diff_x = mouse_x - sprite_x
-        diff_y = mouse_y - sprite_y
-        angle = math.atan2(diff_x, diff_y)*180/math.pi
-        #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
+        angle = self.get_angle(event)
         if self.mouse_down:
             if -60 > angle > -120 and self.m_sprites[0].state != 'left':
                 self.m_sprites[0].set_state('left')
@@ -258,7 +256,6 @@ class Demo(QGraphicsView):
                 self.m_sprites[0].set_state('static')
             if (angle <= -120 or angle >= 120) and self.m_sprites[0].state != 'up_static':
                 self.m_sprites[0].set_state('up_static')
-
 
     def mouseReleaseEvent(self, event):
         self.mouse_down = False
