@@ -75,7 +75,7 @@ class Sprite():
 class Link(Sprite):
     def __init__(self, x=0, y=0, parent=None, width=None, height=None):
         super().__init__(x=x, y=y, sheet='linkEdit.png', parent=parent, width=width, height=height)
-        self.set_static(0, 0, 120, 130, -380, -275)
+        self.set_static(0, 0, 120, 130, -675, -525, scale=.5)#-380, -275, scale=1)
 
         # Add state blink
         pix = []
@@ -209,16 +209,19 @@ class Demo(QGraphicsView):
     def keyReleaseEvent(self, event):
         if event.isAutoRepeat() or self.mouse_down:
             return
-        self.key_pressed = False
         key = event.key()
         #print('Keyboard released?')
         if self.m_sprites[0].state == 'left' and (key == Qt.Key_Left or key == Qt.Key_A):
+            self.key_pressed = False
             self.m_sprites[0].state = 'left_static'
         if self.m_sprites[0].state == 'right' and (key == Qt.Key_Right or key == Qt.Key_D):
+            self.key_pressed = False
             self.m_sprites[0].state = 'right_static'
         if self.m_sprites[0].state == 'down' and (key == Qt.Key_Down or key == Qt.Key_S):
+            self.key_pressed = False
             self.m_sprites[0].state = 'static'
         if self.m_sprites[0].state == 'up' and (key == Qt.Key_Up or key == Qt.Key_W):
+            self.key_pressed = False
             self.m_sprites[0].state = 'up_static'
 
     def mousePressEvent(self, event):
