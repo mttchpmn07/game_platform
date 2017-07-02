@@ -6,7 +6,8 @@ from PyQt5.QtCore import QRect, QPointF, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QLinearGradient, QPen, QPainter,
                          QPixmap, QRadialGradient)
 from PyQt5.QtWidgets import (QLabel, QGraphicsItem, QApplication, QFrame, QGraphicsDropShadowEffect,
-                             QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsScene, QGraphicsView)
+                             QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsScene, QGraphicsView,
+                             QGraphicsPixmapItem)
 
 
 class ProtoObj(object):
@@ -18,30 +19,54 @@ class ProtoObj(object):
         self.radY = radY
         self.parent = parent
         self.ellipse = QGraphicsEllipseItem(posX, posY, radX, radY)
-        self.map = QPixmap('link_static.png')
+        self.sheet = QPixmap('linkEdit.png')
+        self.stand = []
+        self.step = 0
+        self.state = 0
+        self.animation_timer = QTimer()
+        self.animation_timer.timeout.connect(self.animate)
+        self.animation_timer.setInterval(1000)
+        self.animation_timer.start()
 
     def initObj(self):
         self.ellipse.setPos(self.posX, self.posY)
         self.ellipse.setPen(QPen(Qt.transparent, 1))
-        self.ellipse.setBrush(QBrush(Qt.green))
+        self.ellipse.setBrush(QBrush(Qt.darkGreen))
         self.ellipse.setZValue(0)
+        self.ellipse.setOpacity(1)
         effect = QGraphicsDropShadowEffect(self.parent)
         effect.setBlurRadius(15)
         effect.setColor(Qt.black)
         self.ellipse.setGraphicsEffect(effect)
-        self.pix = self.parent.m_scene.addPixmap(self.map)
+        self.stand.append(self.sheet.copy(10, 15, 100, 120))
+        self.stand.append(self.sheet.copy(130, 15, 100, 120))
+        self.stand.append(self.sheet.copy(250, 15, 100, 120))
+        self.pix = self.parent.m_scene.addPixmap(self.stand[0])
         self.pix.setPos(self.posX, self.posY)
-        self.pix.setOffset(-37, -34)
+        self.pix.setOffset(-20, -56)
         self.pix.setZValue(2)
-        self.pix.setScale(.2)
-
+        self.pix.setScale(1)
 
     def getObj(self):
-        return [self.ellipse, self.map]
+        return [self.ellipse]
 
     def moveObj(self, velX, velY):
         self.posX += velX
         self.posY += velY
+        self.pix.setPos(self.posX, self.posY)
+
+    def animate(self):
+        if self.state == 0:
+            self.step += 1
+            if self.step > 2:
+                self.step = 0
+            'standing'
+            #self.pix = self.parent.m_scene.addPixmap(self.stand[self.step])
+            self.pix.setPixmap(self.stand[self.step])
+            self.pix.setPos(self.posX, self.posY)
+            #self.pix.setOffset(-20, -70)
+            self.pix.setZValue(2)
+
 
 
 class Lighting(QGraphicsView):
@@ -57,10 +82,10 @@ class Lighting(QGraphicsView):
 
         self.setupScene()
 
-        timer = QTimer(self)
-        timer.timeout.connect(self.animate)
-        timer.setInterval(30)
-        timer.start()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.animate)
+        self.timer.setInterval(30)
+        self.timer.start()
 
         self.setRenderHint(QPainter.Antialiasing)
         self.setFrameStyle(QFrame.NoFrame)
@@ -90,9 +115,8 @@ class Lighting(QGraphicsView):
         self.m_lightSource = self.m_scene.addPixmap(pixmap)
         self.m_lightSource.setZValue(2)
 
-        proto = ProtoObj(0, 0, 50, 50, self)
-        proto.initObj()
-        self.proto = proto
+        self.proto = ProtoObj(0, 0, 50, 50, self)
+        self.proto.initObj()
 
         #self.m_items.append(self.proto.getObj()[0])
         self.m_scene.addItem(self.proto.getObj()[0])
@@ -115,7 +139,8 @@ class Lighting(QGraphicsView):
         color.setAlphaF(max(0.4, min(1 - dd / 200.0, 0.7)))
         effect.setColor(color)
         item.setPos(self.proto.posX, self.proto.posY)
-        self.proto.pix.setPos(self.proto.posX, self.proto.posY)
+        #self.proto.animate(0)
+        #self.proto.pix.setPos(self.proto.posX, self.proto.posY)
         self.m_scene.update()
 
     def keyPressEvent(self, event):
