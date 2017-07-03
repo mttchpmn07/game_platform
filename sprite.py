@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (QLabel, QGraphicsItem, QApplication, QFrame, QGraph
                              QGraphicsPixmapItem)
 
 
-class Sprite():
+class Sprite:
     def __init__(self, x=0, y=0, sheet=None, parent=None, width=None, height=None):
         self.x = x
         self.y = y
@@ -74,7 +74,7 @@ class Sprite():
 
 class Link(Sprite):
     def __init__(self, x=0, y=0, parent=None, width=None, height=None):
-        super().__init__(x=x, y=y, sheet='linkEdit.png', parent=parent, width=width, height=height)
+        super().__init__(x=x, y=y, sheet='assets/linkEdit.png', parent=parent, width=width, height=height)
         self.set_static(0, 0, 120, 130, -675, -525, scale=.5)#-380, -275, scale=1)
 
         # Add state blink
