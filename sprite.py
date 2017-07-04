@@ -55,8 +55,8 @@ class Sprite:
     def move_sprite(self, new_x, new_y):
         #self.x += velX
         #self.y += velY
-        self.x += new_x
-        self.y += new_y
+        self.x = new_x
+        self.y = new_y
         self.pix.setPos(self.x, self.y)
 
     def set_state(self, state):

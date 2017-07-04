@@ -25,11 +25,29 @@ class Player:
         if sprite is not None:
             self.sprite.move_sprite(self.x, self.y)
 
+        self.delay = 50
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.simulate)
+        self.timer.setInterval(self.delay)
+        self.timer.start()
+
     def set_state(self, state):
         self.sprite.set_state(state)
 
     def state(self):
         return self.sprite.state
+
+    def simulate(self):
+        if self.state() == 'right':
+            self.x += 10
+        if self.state() == 'left':
+            self.x -= 10
+        if self.state() == 'up':
+            self.y -= 10
+        if self.state() == 'down':
+            self.y += 10
+        print('Player <%d, %d>, Sprite <%d, %d>' % (self.x, self.y, self.sprite.x, self.sprite.y))
+        self.sprite.move_sprite(self.x, self.y)
 
 class Demo(QGraphicsView):
     def __init__(self, parent=None):
@@ -69,6 +87,7 @@ class Demo(QGraphicsView):
         self.setBackgroundBrush(linear_grad)
 
     def animate(self):
+        self.centerOn(self.player.x, self.player.y)
         self.m_scene.update()
 
     def get_angle(self, event):
@@ -107,7 +126,7 @@ class Demo(QGraphicsView):
                 self.player.set_state('static')
         if key == Qt.Key_Escape:
             exit()
-        super(Demo, self).keyPressEvent(event)
+        #super(Demo, self).keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
         if event.isAutoRepeat() or self.mouse_down:
