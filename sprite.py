@@ -81,7 +81,7 @@ class Sprite:
 class Link(Sprite):
     def __init__(self, x=0, y=0, parent=None, width=None, height=None):
         super().__init__(x=x, y=y, sheet='assets/linkEdit.png', parent=parent, width=width, height=height)
-        self.set_static(0, 0, 120, 130, 0, 0, scale=.5)#-380, -275, scale=1) #-675, -525, scale=.5)
+        self.set_static(0, 0, 120, 130, -50, -110, scale=.5)#-380, -275, scale=1) #-675, -525, scale=.5)
 
         # Add state blink
         pix = []
@@ -135,7 +135,7 @@ class Demo(QGraphicsView):
     def __init__(self, parent=None):
         super(Demo, self).__init__(parent)
 
-        self.setFixedSize(self.size())
+        self.setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT)#self.size())
 
         self.m_scene = QGraphicsScene()
         self.m_lightSource = None
@@ -170,10 +170,10 @@ class Demo(QGraphicsView):
         link = Link(parent=self)
         link.move_sprite(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)
         self.m_sprites.append(link)
-        self.m_items.append(QGraphicsEllipseItem(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 5, 5))
-        self.m_items[0].setPen(QPen(Qt.black, 1))
-        self.m_items[0].setBrush(QBrush(Qt.black))
-        self.m_scene.addItem(self.m_items[0])
+        #self.m_items.append(QGraphicsEllipseItem(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 1, 1))
+        #self.m_items[0].setPen(QPen(Qt.black, 1))
+        #self.m_items[0].setBrush(QBrush(Qt.black))
+        #self.m_scene.addItem(self.m_items[0])
 
     def animate(self):
         #for sprite in self.m_sprites:
@@ -292,7 +292,7 @@ def main():
 
     demo = Demo()
     demo.setWindowTitle("Demo Sprite")
-    demo.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
+    #demo.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
     demo.show()
 
     sys.exit(app.exec_())
