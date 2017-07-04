@@ -11,6 +11,9 @@ from PyQt5.QtWidgets import (QLabel, QGraphicsItem, QApplication, QFrame, QGraph
                              QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsScene, QGraphicsView,
                              QGraphicsPixmapItem)
 
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+
 
 class Sprite:
     def __init__(self, x=0, y=0, sheet=None, parent=None, width=None, height=None):
@@ -38,7 +41,7 @@ class Sprite:
 
     def set_static(self, x=0, y=0, x_shift=None, y_shift=None, x_offset=0, y_offset=0,
                    z=1, scale=1):
-        if x_offset is None or y_offset is None:
+        if x_shift is None or y_shift is None:
             self.states['static']['pix'].append(self.sheet)
         else:
             self.states['static']['pix'].append(self.sheet.copy(x, y, x_shift, y_shift))
@@ -48,9 +51,12 @@ class Sprite:
         self.pix.setZValue(z)
         self.pix.setScale(scale)
 
-    def move_sprite(self, velX, velY):
-        self.x += velX
-        self.y += velY
+    #def move_sprite(self, velX, velY):
+    def move_sprite(self, new_x, new_y):
+        #self.x += velX
+        #self.y += velY
+        self.x += new_x
+        self.y += new_y
         self.pix.setPos(self.x, self.y)
 
     def set_state(self, state):
@@ -75,7 +81,7 @@ class Sprite:
 class Link(Sprite):
     def __init__(self, x=0, y=0, parent=None, width=None, height=None):
         super().__init__(x=x, y=y, sheet='assets/linkEdit.png', parent=parent, width=width, height=height)
-        self.set_static(0, 0, 120, 130, -675, -525, scale=.5)#-380, -275, scale=1)
+        self.set_static(0, 0, 120, 130, 0, 0, scale=.5)#-380, -275, scale=1) #-675, -525, scale=.5)
 
         # Add state blink
         pix = []
@@ -153,15 +159,21 @@ class Demo(QGraphicsView):
         self.key_pressed = False
 
     def setup_scene(self):
-        self.m_scene.setSceneRect(-300, -200, 600, 460)
+        self.m_scene.setSceneRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.centerOn(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)
 
         linear_grad = QLinearGradient(QPointF(-100, -100), QPointF(100, 100))
         linear_grad.setColorAt(0, QColor(255, 255, 255))
         linear_grad.setColorAt(1, QColor(192, 192, 255))
         self.setBackgroundBrush(linear_grad)
 
-        link = Link(x=320, y=210, parent=self)
+        link = Link(parent=self)
+        link.move_sprite(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)
         self.m_sprites.append(link)
+        self.m_items.append(QGraphicsEllipseItem(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 5, 5))
+        self.m_items[0].setPen(QPen(Qt.black, 1))
+        self.m_items[0].setBrush(QBrush(Qt.black))
+        self.m_scene.addItem(self.m_items[0])
 
     def animate(self):
         #for sprite in self.m_sprites:
@@ -225,7 +237,8 @@ class Demo(QGraphicsView):
             self.m_sprites[0].state = 'up_static'
 
     def mousePressEvent(self, event):
-        #print('Pressed mouse?')
+        print('Pressed mouse? : <%d, %d>' % (event.pos().x(), event.pos().y()))
+        print('Sprite Pos : <%d, %d>' % (self.m_sprites[0].x, self.m_sprites[0].y))
         self.mouse_down = True
         angle = self.get_angle(event)
         if -60 > angle > -120 and self.m_sprites[0].state != 'left':
@@ -279,7 +292,7 @@ def main():
 
     demo = Demo()
     demo.setWindowTitle("Demo Sprite")
-    demo.resize(640, 480)
+    demo.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
     demo.show()
 
     sys.exit(app.exec_())

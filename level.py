@@ -196,7 +196,7 @@ def main():
     app = QApplication(sys.argv)
 
     demo = Demo()
-    demo.setWindowTitle("Demo Map")
+    demo.setWindowTitle("Demo Map Explorer")
     demo.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
     demo.show()
 
