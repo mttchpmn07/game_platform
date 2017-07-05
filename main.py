@@ -3,6 +3,7 @@
 """Note to self Sprite(object) and Sprite() are the same in python 3"""
 
 import math
+import numpy as np
 
 from PyQt5.QtCore import QRect, QPointF, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QLinearGradient, QPen, QPainter,
@@ -12,9 +13,11 @@ from PyQt5.QtWidgets import (QLabel, QGraphicsItem, QApplication, QFrame, QGraph
                              QGraphicsPixmapItem)
 from sprite import Link
 from level import Level
+from position import Position
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
+
 
 class Player:
     def __init__(self, parent=None, x=400, y=300, sprite=None):
