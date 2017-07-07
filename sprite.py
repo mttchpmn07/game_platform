@@ -185,16 +185,9 @@ class Demo(QGraphicsView):
 
     def get_angle(self, event):
         mouse_pos = Position(x=event.pos().x(), y=event.pos().y())
-        #sprite_x = self.m_sprites[0].x
-        #sprite_y = self.m_sprites[0].y
-        #mouse_x = event.pos().x()
-        #mouse_y = event.pos().y()
-        #diff_x = mouse_x - sprite_x
-        #diff_y = mouse_y - sprite_y
-        #angle = math.atan2(diff_x, diff_y) * 180 / math.pi
-        #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
-        print(self.m_sprites[0].pos)
-        print(mouse_pos)
+        print('sprite : %s' % self.m_sprites[0].pos)
+        print('mouse : %s' % mouse_pos)
+        print('angle : %s' % (self.m_sprites[0].pos < mouse_pos))
         return self.m_sprites[0].pos < mouse_pos
 
     def keyPressEvent(self, event):
