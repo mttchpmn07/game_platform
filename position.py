@@ -1,12 +1,39 @@
-import math
+from math import atan2, pi
 
 
 class Position:
-    def __init__(self, x, y):
-        self.pos = [x, y]
+    def __init__(self, x=0, y=0, pos=None):
+        assert type(x) is int
+        assert type(y) is int
+        if pos is None:
+            self.pos = [x, y]
+        else:
+            if type(pos) is Position:
+                self.pos = [pos.x(), pos.y()]
+            else:
+                self.pos = pos
+
+    def x(self, x=None):
+        if x is None:
+            return self.pos[0]
+        else:
+            self.pos[0] = x
+
+    def y(self, y=None):
+        if y is None:
+            return self.pos[1]
+        else:
+            self.pos[1] = y
+
+    def set(self, pos=None):
+        if pos is not None:
+            if type(pos) is Position:
+                self.pos = [pos.x(), pos.y()]
+            else:
+                self.pos = pos
 
     def __add__(self, other):
-        return Position(self.pos[0] + other.pos[0], self.pos[1] + other.pos[1])
+        return Position(pos=[self.pos[0] + other.pos[0], self.pos[1] + other.pos[1]])
 
     def __mul__(self, other):
         return self.pos[0] * other.pos[0] + self.pos[1] * other.pos[1]
@@ -14,12 +41,13 @@ class Position:
     def __lt__(self, other):
         diff_x = other.pos[0] - self.pos[0]
         diff_y = other.pos[1] - self.pos[1]
-        angle = math.atan2(diff_x, diff_y) * 180 / math.pi
+        angle = atan2(diff_x, diff_y) * 180 / pi
         if angle < 0:
             angle += 360
         return angle
 
     def __str__(self):
+        #print(str(self.pos))
         return '<' + str(self.pos[0]) + ', ' + str(self.pos[1]) + '>'
 
 

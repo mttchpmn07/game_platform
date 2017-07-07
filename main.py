@@ -2,9 +2,6 @@
 
 """Note to self Sprite(object) and Sprite() are the same in python 3"""
 
-import math
-import numpy as np
-
 from PyQt5.QtCore import QRect, QPointF, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QLinearGradient, QPen, QPainter,
                          QPixmap, QRadialGradient)
@@ -22,11 +19,11 @@ WINDOW_HEIGHT = 600
 class Player:
     def __init__(self, parent=None, x=400, y=300, sprite=None):
         self.parent = parent
-        self.x = x
-        self.y = y
+        self.pos = Position(pos=[x, y])
         self.sprite = sprite
+        print(self.pos)
         if sprite is not None:
-            self.sprite.move_sprite(self.x, self.y)
+            self.sprite.move_sprite(self.pos)
 
         self.delay = 50
         self.timer = QTimer()
@@ -41,16 +38,19 @@ class Player:
         return self.sprite.state
 
     def simulate(self):
+        #print('Player %s' % (self.pos))
+        vel = Position(pos=[0, 0])
         if self.state() == 'right':
-            self.x += 10
+            vel.set(pos=[10, 0])
         if self.state() == 'left':
-            self.x -= 10
+            vel.set(pos=[-10, 0])
         if self.state() == 'up':
-            self.y -= 10
+            vel.set(pos=[0, -10])
         if self.state() == 'down':
-            self.y += 10
-        print('Player <%d, %d>, Sprite <%d, %d>' % (self.x, self.y, self.sprite.x, self.sprite.y))
-        self.sprite.move_sprite(self.x, self.y)
+            vel.set(pos=[0, 10])
+        self.pos = self.pos + vel
+        self.sprite.move_sprite(self.pos)
+
 
 class Demo(QGraphicsView):
     def __init__(self, parent=None):
@@ -90,19 +90,15 @@ class Demo(QGraphicsView):
         self.setBackgroundBrush(linear_grad)
 
     def animate(self):
-        self.centerOn(self.player.x, self.player.y)
+        self.centerOn(self.player.pos.x(), self.player.pos.y())
         self.m_scene.update()
 
     def get_angle(self, event):
-        sprite_x = self.player.x
-        sprite_y = self.player.y
-        mouse_x = event.pos().x()
-        mouse_y = event.pos().y()
-        diff_x = mouse_x - sprite_x
-        diff_y = mouse_y - sprite_y
-        angle = math.atan2(diff_x, diff_y) * 180 / math.pi
-        #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
-        return angle
+        mouse_pos = Position(x=event.pos().x(), y=event.pos().y())
+        print('Player : %s' % self.player.pos)
+        print('Mouse : %s' % mouse_pos)
+        print('Angle : %f' % (self.player.pos < mouse_pos))
+        return self.player.pos < mouse_pos
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -150,41 +146,43 @@ class Demo(QGraphicsView):
             self.player.set_state('up_static')
 
     def mousePressEvent(self, event):
-        print('Pressed mouse? : <%d, %d>' % (event.pos().x(), event.pos().y()))
-        print('Player Pos : <%d, %d>' % (self.player.x, self.player.y))
+        # print('Pressed mouse? : <%d, %d>' % (event.pos().x(), event.pos().y()))
+        # print('Sprite Pos : <%d, %d>' % (self.player.pos.x(), self.player.pos.y()))
         self.mouse_down = True
         angle = self.get_angle(event)
-        if -60 > angle > -120 and self.player.state() != 'left':
+        print(angle)
+        if 240 < angle < 300 and self.player.state != 'left':
             self.player.set_state('left')
-        if 60 < angle < 120 and self.player.state() != 'right':
+        elif 60 < angle < 120 and self.player.state != 'right':
             self.player.set_state('right')
-        if -60 <= angle <= 60 and self.player.state() != 'down':
-            self.player.set_state('down')
-        if (angle <= -120 or angle >= 120) and self.player.state() != 'up':
+        elif 120 <= angle <= 240 and self.player.state != 'up':
             self.player.set_state('up')
+        elif (angle >= 300 or angle <= 60) and self.player.state != 'down':
+            self.player.set_state('down')
 
     def mouseMoveEvent(self, event):
         if self.key_pressed:
             return
         angle = self.get_angle(event)
+        # print(angle)
         if self.mouse_down:
-            if -60 > angle > -120 and self.player.state() != 'left':
+            if 240 < angle < 300 and self.player.state != 'left':
                 self.player.set_state('left')
-            if 60 < angle < 120 and self.player.state() != 'right':
+            elif 60 < angle < 120 and self.player.state != 'right':
                 self.player.set_state('right')
-            if -60 <= angle <= 60 and self.player.state() != 'down':
-                self.player.set_state('down')
-            if (angle <= -120 or angle >= 120) and self.player.state() != 'up':
+            elif 120 <= angle <= 240 and self.player.state != 'up':
                 self.player.set_state('up')
+            elif (angle >= 300 or angle <= 60) and self.player.state != 'down':
+                self.player.set_state('down')
         else:
-            if -60 > angle > -120 and self.player.state() != 'left_static':
+            if 240 < angle < 300 and self.player.state != 'left_static':
                 self.player.set_state('left_static')
-            if 60 < angle < 120 and self.player.state != 'right_static':
+            elif 60 < angle < 120 and self.player.state != 'right_static':
                 self.player.set_state('right_static')
-            if -60 <= angle <= 60 and self.player.state() != 'static':
-                self.player.set_state('static')
-            if (angle <= -120 or angle >= 120) and self.player.state() != 'up_static':
+            elif 120 <= angle <= 240 and self.player.state != 'up_static':
                 self.player.set_state('up_static')
+            elif (angle >= 300 or angle <= 60) and self.player.state != 'static':
+                self.player.set_state('static')
 
     def mouseReleaseEvent(self, event):
         self.mouse_down = False

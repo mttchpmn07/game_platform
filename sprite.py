@@ -10,15 +10,18 @@ from PyQt5.QtGui import (QBrush, QColor, QLinearGradient, QPen, QPainter,
 from PyQt5.QtWidgets import (QLabel, QGraphicsItem, QApplication, QFrame, QGraphicsDropShadowEffect,
                              QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsScene, QGraphicsView,
                              QGraphicsPixmapItem)
+from position import Position
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 
 
 class Sprite:
-    def __init__(self, x=0, y=0, sheet=None, parent=None, width=None, height=None):
-        self.x = x
-        self.y = y
+    def __init__(self, pos=None, sheet=None, parent=None, width=None, height=None):
+        if pos is None:
+            self.pos = Position(pos=[0, 0])
+        else:
+            self.pos = Position(pos=pos)
         self.parent = parent
         self.width = width
         self.height = height
@@ -39,25 +42,25 @@ class Sprite:
     def set_sheet(self, sheet):
         self.sheet = QPixmap(sheet)
 
-    def set_static(self, x=0, y=0, x_shift=None, y_shift=None, x_offset=0, y_offset=0,
-                   z=1, scale=1):
+    def set_static(self, pix_pos=None, x_shift=None, y_shift=None, x_offset=0, y_offset=0,
+                   z=1, scale=1.0):
+        if pix_pos is None:
+            pix_pos = Position()
+        else:
+            pix_pos = Position(pos=pix_pos)
         if x_shift is None or y_shift is None:
             self.states['static']['pix'].append(self.sheet)
         else:
-            self.states['static']['pix'].append(self.sheet.copy(x, y, x_shift, y_shift))
+            self.states['static']['pix'].append(self.sheet.copy(pix_pos.x(), pix_pos.y(), x_shift, y_shift))
         self.pix = self.parent.m_scene.addPixmap(self.states['static']['pix'][0])
-        self.pix.setPos(self.x, self.y)
+        self.pix.setPos(self.pos.x(), self.pos.y())
         self.pix.setOffset(x_offset, y_offset)
         self.pix.setZValue(z)
         self.pix.setScale(scale)
 
-    #def move_sprite(self, velX, velY):
-    def move_sprite(self, new_x, new_y):
-        #self.x += velX
-        #self.y += velY
-        self.x = new_x
-        self.y = new_y
-        self.pix.setPos(self.x, self.y)
+    def move_sprite(self, pos):
+        self.pos.set(pos)
+        self.pix.setPos(self.pos.x(), self.pos.y())
 
     def set_state(self, state):
         self.state = state
@@ -79,9 +82,9 @@ class Sprite:
 
 
 class Link(Sprite):
-    def __init__(self, x=0, y=0, parent=None, width=None, height=None):
-        super().__init__(x=x, y=y, sheet='assets/linkEdit.png', parent=parent, width=width, height=height)
-        self.set_static(0, 0, 120, 130, -50, -110, scale=.5)#-380, -275, scale=1) #-675, -525, scale=.5)
+    def __init__(self, pos=None, parent=None, width=None, height=None):
+        super().__init__(pos=pos, sheet='assets/linkEdit.png', parent=parent, width=width, height=height)
+        self.set_static(x_shift=120, y_shift=130, x_offset=-50, y_offset=-110, scale=.5)#-380, -275, scale=1) #-675, -525, scale=.5)
 
         # Add state blink
         pix = []
@@ -168,7 +171,7 @@ class Demo(QGraphicsView):
         self.setBackgroundBrush(linear_grad)
 
         link = Link(parent=self)
-        link.move_sprite(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)
+        link.move_sprite([WINDOW_WIDTH/2, WINDOW_HEIGHT/2])
         self.m_sprites.append(link)
         #self.m_items.append(QGraphicsEllipseItem(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 1, 1))
         #self.m_items[0].setPen(QPen(Qt.black, 1))
@@ -181,15 +184,18 @@ class Demo(QGraphicsView):
         self.m_scene.update()
 
     def get_angle(self, event):
-        sprite_x = self.m_sprites[0].x
-        sprite_y = self.m_sprites[0].y
-        mouse_x = event.pos().x()
-        mouse_y = event.pos().y()
-        diff_x = mouse_x - sprite_x
-        diff_y = mouse_y - sprite_y
-        angle = math.atan2(diff_x, diff_y) * 180 / math.pi
+        mouse_pos = Position(x=event.pos().x(), y=event.pos().y())
+        #sprite_x = self.m_sprites[0].x
+        #sprite_y = self.m_sprites[0].y
+        #mouse_x = event.pos().x()
+        #mouse_y = event.pos().y()
+        #diff_x = mouse_x - sprite_x
+        #diff_y = mouse_y - sprite_y
+        #angle = math.atan2(diff_x, diff_y) * 180 / math.pi
         #print("sprite: <%d, %d>, mouse:<%d, %d>, angle:%f" % (sprite_x, sprite_y, mouse_x, mouse_y, angle))
-        return angle
+        print(self.m_sprites[0].pos)
+        print(mouse_pos)
+        return self.m_sprites[0].pos < mouse_pos
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -238,40 +244,42 @@ class Demo(QGraphicsView):
 
     def mousePressEvent(self, event):
         print('Pressed mouse? : <%d, %d>' % (event.pos().x(), event.pos().y()))
-        print('Sprite Pos : <%d, %d>' % (self.m_sprites[0].x, self.m_sprites[0].y))
+        print('Sprite Pos : <%d, %d>' % (self.m_sprites[0].pos.x(), self.m_sprites[0].pos.y()))
         self.mouse_down = True
         angle = self.get_angle(event)
-        if -60 > angle > -120 and self.m_sprites[0].state != 'left':
+        print(angle)
+        if 240 < angle < 300 and self.m_sprites[0].state != 'left':
             self.m_sprites[0].set_state('left')
-        if 60 < angle < 120 and self.m_sprites[0].state != 'right':
+        elif 60 < angle < 120 and self.m_sprites[0].state != 'right':
             self.m_sprites[0].set_state('right')
-        if -60 <= angle <= 60 and self.m_sprites[0].state != 'down':
-            self.m_sprites[0].set_state('down')
-        if (angle <= -120 or angle >= 120) and self.m_sprites[0].state != 'up':
+        elif 120 <= angle <= 240 and self.m_sprites[0].state != 'up':
             self.m_sprites[0].set_state('up')
+        elif (angle >= 300 or angle <= 60) and self.m_sprites[0].state != 'down':
+            self.m_sprites[0].set_state('down')
 
     def mouseMoveEvent(self, event):
         if self.key_pressed:
             return
         angle = self.get_angle(event)
+        print(angle)
         if self.mouse_down:
-            if -60 > angle > -120 and self.m_sprites[0].state != 'left':
+            if 240 < angle < 300 and self.m_sprites[0].state != 'left':
                 self.m_sprites[0].set_state('left')
-            if 60 < angle < 120 and self.m_sprites[0].state != 'right':
+            elif 60 < angle < 120 and self.m_sprites[0].state != 'right':
                 self.m_sprites[0].set_state('right')
-            if -60 <= angle <= 60 and self.m_sprites[0].state != 'down':
-                self.m_sprites[0].set_state('down')
-            if (angle <= -120 or angle >= 120) and self.m_sprites[0].state != 'up':
+            elif 120 <= angle <= 240 and self.m_sprites[0].state != 'up':
                 self.m_sprites[0].set_state('up')
+            elif (angle >= 300 or angle <= 60) and self.m_sprites[0].state != 'down':
+                self.m_sprites[0].set_state('down')
         else:
-            if -60 > angle > -120 and self.m_sprites[0].state != 'left_static':
+            if 240 < angle < 300 and self.m_sprites[0].state != 'left_static':
                 self.m_sprites[0].set_state('left_static')
-            if 60 < angle < 120 and self.m_sprites[0].state != 'right_static':
+            elif 60 < angle < 120 and self.m_sprites[0].state != 'right_static':
                 self.m_sprites[0].set_state('right_static')
-            if -60 <= angle <= 60 and self.m_sprites[0].state != 'static':
-                self.m_sprites[0].set_state('static')
-            if (angle <= -120 or angle >= 120) and self.m_sprites[0].state != 'up_static':
+            elif 120 <= angle <= 240 and self.m_sprites[0].state != 'up_static':
                 self.m_sprites[0].set_state('up_static')
+            elif (angle >= 300 or angle <= 60) and self.m_sprites[0].state != 'static':
+                self.m_sprites[0].set_state('static')
 
     def mouseReleaseEvent(self, event):
         self.mouse_down = False
