@@ -106,13 +106,13 @@ class Demo(QGraphicsView):
         self.key_pressed = False
         self.shift = False
 
-        ran_foliage = lambda x: 0 if x < .75 else ['assets/tree.png', 0, 0, 64, 64]
-        ran_obj = lambda x: 0 if x < .9 else [['assets/ore.png', 0, 0, 64, 64]]
-        level = {'base': [[['assets/grass.png', 0, 0, 64, 64] for i in range(64)] for j in range(64)],
-                 'foliage': [[ran_foliage(random.uniform(0, 1)) for i in range(64)] for j in range(64)],
-                 'object': [[ran_obj(random.uniform(0, 1)) for i in range(64)] for j in range(64)],
-                 'tilted': [[0 for i in range(16)] for j in range(16)],
-                 'walkable': [[True for i in range(16)] for j in range(16)]}
+        ran_foliage = lambda x: 0 if x < .75 else ['assets/tree.png', 0, 0, 128, 128]
+        ran_obj = lambda x: 0 if x < .9 else [['assets/ore.png', 0, 0, 128, 128]]
+        level = {'base': [[['assets/grass.png', 0, 0, 128, 128] for i in range(128)] for j in range(128)],
+                 'foliage': [[ran_foliage(random.uniform(0, 1)) for i in range(128)] for j in range(128)],
+                 'object': [[ran_obj(random.uniform(0, 1)) for i in range(128)] for j in range(128)],
+                 'tilted': [[0 for i in range(128)] for j in range(128)],
+                 'walkable': [[True for i in range(128)] for j in range(128)]}
         self.level = Level(self, fp='assets/level_test.txt', level=level)
 
     def setup_scene(self):

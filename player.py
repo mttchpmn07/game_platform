@@ -12,13 +12,15 @@ from sprite import Link
 from level import Level
 from position import Position
 
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 1200
+WINDOW_HEIGHT = 800
+MAP_WIDTH = 8192
+MAP_HEIGHT = 8192
 
 
 class Player:
     def __init__(self, parent=None, x=400, y=300, sprite=None,
-                 level_max_x=4096-WINDOW_WIDTH, level_max_y=4096-WINDOW_HEIGHT,
+                 level_max_x=MAP_WIDTH-WINDOW_WIDTH, level_max_y=MAP_HEIGHT-WINDOW_HEIGHT,
                  level_min_x=WINDOW_WIDTH/2, level_min_y=WINDOW_HEIGHT/2):
         self.parent = parent
         self.pos = Position(pos=[x, y])
@@ -45,7 +47,7 @@ class Player:
         return self.sprite.state
 
     def mov(self):
-        print('Stamina : %f' % self.stamina)
+        print('Stamina : %s' % round(self.stamina, 2))
         self.stamina += self.stamina_fade
         if self.stamina > 100:
             self.stamina = 100
@@ -79,7 +81,7 @@ class Demo(QGraphicsView):
         #   Set up entities (not attached to this term, but basically things like light sources, level, npcs)
         self.m_lightSource = None
         self.level = Level(self, fp='assets/level_test.txt')
-        self.player = Player(self, 2048, 2048, Link(parent=self))
+        self.player = Player(self, MAP_WIDTH/2, MAP_HEIGHT/2, Link(parent=self))
 
         #   Setup animation timer
         self.timer = QTimer(self)
@@ -97,7 +99,7 @@ class Demo(QGraphicsView):
         self.key_pressed = False
 
     def setup_scene(self):
-        self.m_scene.setSceneRect(0, 0, 4096, 4096)
+        self.m_scene.setSceneRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
 
         linear_grad = QLinearGradient(QPointF(-100, -100), QPointF(100, 100))
         linear_grad.setColorAt(0, QColor(255, 255, 255))
@@ -119,36 +121,31 @@ class Demo(QGraphicsView):
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Shift:
-            self.player.speed = 5
+            self.player.speed = 3
             self.player.stamina_fade = -.1
         if event.isAutoRepeat() or self.mouse_down:
             return
         self.key_pressed = True
         if key == Qt.Key_Up or key == Qt.Key_W:
-            # print('Pressed Up or W?')
             self.player.set_state('up')
             self.player.vel = Position(0, -self.player.speed)
         if key == Qt.Key_Down or key == Qt.Key_S:
-            # print('Pressed Down or S?')
             self.player.set_state('down')
             self.player.vel = Position(0, self.player.speed)
         if key == Qt.Key_Left or key == Qt.Key_A:
-            # print('Pressed Left or A?')
             self.player.set_state('left')
             self.player.vel = Position(-self.player.speed, 0)
         if key == Qt.Key_Right or key == Qt.Key_D:
-            # print('Pressed Right or D?')
             self.player.set_state('right')
             self.player.vel = Position(self.player.speed, 0)
         if key == Qt.Key_Space:
-            # print('Pressed Space?')
             if self.player.state() == 'static':
                 self.player.set_state('blink')
             else:
                 self.player.set_state('static')
         if key == Qt.Key_Escape:
             exit()
-        #super(Demo, self).keyPressEvent(event)
+        # super(Demo, self).keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
         key = event.key()
@@ -158,7 +155,6 @@ class Demo(QGraphicsView):
         if event.isAutoRepeat() or self.mouse_down:
             return
         self.player.vel = Position(0, 0)
-        # print('Keyboard released?')
         if self.player.state() == 'left' and (key == Qt.Key_Left or key == Qt.Key_A):
             self.key_pressed = False
             self.player.set_state('left_static')
@@ -171,6 +167,9 @@ class Demo(QGraphicsView):
         if self.player.state() == 'up' and (key == Qt.Key_Up or key == Qt.Key_W):
             self.key_pressed = False
             self.player.set_state('up_static')
+
+    def wheelEvent(self, event):
+        "Don't want the scoll wheel to do anything yet."
 
     def mousePressEvent(self, event):
         # print('Pressed mouse? : <%d, %d>' % (event.pos().x(), event.pos().y()))
@@ -196,7 +195,6 @@ class Demo(QGraphicsView):
         if self.key_pressed:
             return
         angle = self.get_angle(event)
-        # print(angle)
         if self.mouse_down:
             mouse_pos = Position(event.pos().x(), event.pos().y())
             mouse_pos = mouse_pos + self.player.pos - Position(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)
@@ -239,8 +237,7 @@ def main():
     app = QApplication(sys.argv)
 
     demo = Demo()
-    demo.setWindowTitle("Demo Sprite")
-    demo.resize(640, 480)
+    demo.setWindowTitle("Demo Player")
     demo.show()
 
     sys.exit(app.exec_())
